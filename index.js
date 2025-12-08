@@ -6,12 +6,9 @@ const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@googl
 const GEMINI_API_KEY = "AIzaSyBOjcbxnEZBA9i22teZlQWGJ7Gop4LqJ8w"; 
 // ---------------------
 
-// Express
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const safetySettings = [
   {
@@ -64,9 +61,9 @@ async function connectToWhatsApp() {
 
         const text = msg.message.conversation || msg.message.imageMessage?.caption || msg.message.extendedTextMessage?.text || '';
         
-        // Triggers: .botak (Bald) or .niggakan (Darker) or others
+        // Triggers: .botak (Bald) or .niggafy (Darker) or others
         if (text.startsWith('.botak') || 
-            text.startsWith('.niggakan') || 
+            text.startsWith('.niggafy') || 
             text.startsWith('.edit') || 
             text.startsWith('.princess') || 
             text.startsWith('.superman')) {
@@ -99,7 +96,7 @@ async function connectToWhatsApp() {
                     // For .botak
                     prompt += "make the person bald";
                     console.log("Edit Prompt:", prompt);
-                } else if (text.startsWith('.niggakan')) {
+                } else if (text.startsWith('.niggafy')) {
                     // For .niggakan
                     prompt += "make the person have darker skin tone";
                     console.log("Edit Prompt:", prompt);
@@ -149,16 +146,5 @@ async function connectToWhatsApp() {
     });
 }
 
-// RENDER SLEEP PREVENTION ENDPOINT
-// This endpoint responds to pings from Uptime Robot/Render
-app.get('/keep-awake', (req, res) => {
-    // You can add logic here to check your WhatsApp connection status
-    res.status(200).send('Bot is Awake!');
-});
-
-// Start the web server. Render automatically sets the PORT environment variable.
-app.listen(PORT, () => {
-    console.log(`Web Server listening on port ${PORT}`);
-});
 
 connectToWhatsApp();
