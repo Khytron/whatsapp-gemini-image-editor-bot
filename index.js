@@ -6,6 +6,11 @@ const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@googl
 const GEMINI_API_KEY = "AIzaSyB5tzQZyuUuOzTRMpz4Ky_fF_oUJb6kCns"; 
 // ---------------------
 
+// Express
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const safetySettings = [
@@ -143,5 +148,17 @@ async function connectToWhatsApp() {
         }
     });
 }
+
+// RENDER SLEEP PREVENTION ENDPOINT
+// This endpoint responds to pings from Uptime Robot/Render
+app.get('/keep-awake', (req, res) => {
+    // You can add logic here to check your WhatsApp connection status
+    res.status(200).send('Bot is Awake!');
+});
+
+// Start the web server. Render automatically sets the PORT environment variable.
+app.listen(PORT, () => {
+    console.log(`Web Server listening on port ${PORT}`);
+});
 
 connectToWhatsApp();
