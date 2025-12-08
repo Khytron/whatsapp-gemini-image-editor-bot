@@ -59,8 +59,12 @@ async function connectToWhatsApp() {
 
         const text = msg.message.conversation || msg.message.imageMessage?.caption || msg.message.extendedTextMessage?.text || '';
         
-        // Triggers: .botak (Bald) or .hitamkan (Darker)
-        if (text.startsWith('.botak') || text.startsWith('.hitamkan') || text.startsWith('.edit')) {
+        // Triggers: .botak (Bald) or .niggakan (Darker) or others
+        if (text.startsWith('.botak') || 
+            text.startsWith('.niggakan') || 
+            text.startsWith('.edit') || 
+            text.startsWith('.princess') || 
+            text.startsWith('.superman')) {
             try {
                 const isImage = Object.keys(msg.message)[0] === 'imageMessage';
                 const isQuotedImage = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage;
@@ -70,7 +74,7 @@ async function connectToWhatsApp() {
                     return;
                 }
 
-                await sock.sendMessage(msg.key.remoteJid, { text: '⚡ Asking Gemini ⚡' }, { quoted: msg });
+                await sock.sendMessage(msg.key.remoteJid, { text: 'Generating image.. ' }, { quoted: msg });
 
                 // // 1. Download
                 const messageToDownload = isImage ? msg : { message: msg.message.extendedTextMessage.contextInfo.quotedMessage };
@@ -82,20 +86,28 @@ async function connectToWhatsApp() {
                     model: "gemini-2.5-flash-image",
                     safetySettings: safetySettings });
 
-                // 3. THE BYPASS PROMPTS
-                // We frame this as "Character Concept Art" or "Lighting Study" to avoid Identity Filters
-                let prompt = "";
+                // 3. THE PROMPTS
+                // System prompt
+                let prompt = "While referring to the body language and facial structure, ";
                 
                 if (text.startsWith('.botak')) {
-                    // Bypass Logic: Ask for a "New Character" based on the reference, not an "Edit"
-                    prompt = "make the person bald";
+                    // For .botak
+                    prompt += "make the person bald";
                     console.log("Edit Prompt:", prompt);
-                } else if (text.startsWith('.hitamkan')) {
-                    // For .hitamkan
-                    prompt = "make the person have darker skin tone";
+                } else if (text.startsWith('.niggakan')) {
+                    // For .niggakan
+                    prompt += "make the person have darker skin tone";
+                    console.log("Edit Prompt:", prompt);
+                } else if (text.startsWith('.princess')) {
+                    // For .princess
+                    prompt += "make the person wear a princess dress, dont enhance body features";
                     console.log("Edit Prompt:", prompt);
                 } else if (text.startsWith('.edit')) {
-                    prompt = text.slice(text.indexOf(' ') + 1).trim();
+                    prompt += text.slice(text.indexOf(' ') + 1).trim();
+                    console.log("Edit Prompt:", prompt);
+                } else if (text.startsWith('.superman')) {
+                    // For .superman
+                    prompt += "make the person's outfit like superman, dont enhance body features";
                     console.log("Edit Prompt:", prompt);
                 }
                 
@@ -116,7 +128,7 @@ async function connectToWhatsApp() {
 
                     await sock.sendMessage(msg.key.remoteJid, { 
                         image: outputBuffer, 
-                        caption: '✨ Gemini Result ✨' 
+                        caption: '' 
                     }, { quoted: msg });
 
                 } catch (innerErr) {
