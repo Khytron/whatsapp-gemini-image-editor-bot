@@ -3,7 +3,7 @@ const pino = require('pino');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@google/generative-ai");
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = "AIzaSyB5tzQZyuUuOzTRMpz4Ky_fF_oUJb6kCns"; 
+const GEMINI_API_KEY = "AIzaSyBOjcbxnEZBA9i22teZlQWGJ7Gop4LqJ8w"; 
 // ---------------------
 
 // Express
@@ -11,7 +11,7 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const safetySettings = [
   {
