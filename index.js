@@ -6,7 +6,10 @@ const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@googl
 const GEMINI_API_KEY = "AIzaSyBOjcbxnEZBA9i22teZlQWGJ7Gop4LqJ8w"; 
 // ---------------------
 
-
+// Express Port
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -66,7 +69,9 @@ async function connectToWhatsApp() {
             text.startsWith('.niggafy') || 
             text.startsWith('.edit') || 
             text.startsWith('.princess') || 
-            text.startsWith('.superman')) {
+            text.startsWith('.superman') ||
+            text.startsWith('.putihkan') ||
+            text.startsWith('.gigachad')) {
             try {
                 const isImage = Object.keys(msg.message)[0] === 'imageMessage';
                 const isQuotedImage = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage;
@@ -83,35 +88,45 @@ async function connectToWhatsApp() {
                 const buffer = await downloadMediaMessage(messageToDownload, 'buffer', { logger: pino({ level: 'silent' }) });
 
                 // 2. Select Model
-                // We use 'gemini-2.5-flash-image' because it is fast and supports image input
+                // We use 'gemini-3-pro-image-preview' because it is fast and supports image input
                 const model = genAI.getGenerativeModel({ 
-                    model: "gemini-2.5-flash-image",
+                    model: "gemini-3-pro-image-preview",
                     safetySettings: safetySettings });
 
                 // 3. THE PROMPTS
                 // System prompt
-                let prompt = "While referring to the body language and facial structure, ";
+                let prompt = "Referring to the body language and facial structure, ";
                 
                 if (text.startsWith('.botak')) {
                     // For .botak
                     prompt += "make the person bald";
-                    console.log("Edit Prompt:", prompt);
+                   
                 } else if (text.startsWith('.niggafy')) {
                     // For .niggakan
                     prompt += "make the person have darker skin tone";
-                    console.log("Edit Prompt:", prompt);
+            
                 } else if (text.startsWith('.princess')) {
                     // For .princess
                     prompt += "make the person wear a princess dress, dont enhance body features";
-                    console.log("Edit Prompt:", prompt);
+                  
                 } else if (text.startsWith('.edit')) {
                     prompt += text.slice(text.indexOf(' ') + 1).trim();
-                    console.log("Edit Prompt:", prompt);
+                 
                 } else if (text.startsWith('.superman')) {
                     // For .superman
                     prompt += "make the person's outfit like superman, dont enhance body features";
-                    console.log("Edit Prompt:", prompt);
+                  
+                } else if (text.startsWith('.putihkan')) {
+                    // For .putihkan
+                    prompt += "make the person have white skin tone";
+                   
+                } else if (text.startsWith('.gigachad')) {
+                    // For .gigachad
+                    prompt += "make the person have gigachad facial features, keep everything else the same";
+                   
                 }
+
+                console.log("Edit Prompt:", prompt);
                 
                 const imagePart = {
                     inlineData: {
@@ -146,5 +161,17 @@ async function connectToWhatsApp() {
     });
 }
 
+
+// RENDER SLEEP PREVENTION ENDPOINT
+// This endpoint responds to pings from Uptime Robot/Render
+app.get('/keep-awake', (req, res) => {
+    // You can add logic here to check your WhatsApp connection status
+    res.status(200).send('Bot is Awake!');
+});
+
+// Start the web server. Render automatically sets the PORT environment variable.
+app.listen(PORT, () => {
+    console.log(`Web Server listening on port ${PORT}`);
+});
 
 connectToWhatsApp();
