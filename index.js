@@ -241,7 +241,7 @@ async function connectToWhatsApp() {
                     
                 } else if (text.startsWith('.tofigura')) {
                     // For .tofigura
-                    prompt += "A realistic product photograph taken on a cluttered wooden office desk. In the foreground, a custom-made toy figure of the person stands on a clear circular base. Next to it is the retail packaging box for the figure, prominently featuring the original photograph of the person on the front cover. In the background, a large computer monitor displays a 3D wireframe mesh model of the same figure within a 3D modeling software interface. A keyboard, mouse, and various cables are visible on the desk. Natural office lighting.";
+                    prompt += "A realistic product photograph taken on a cluttered wooden office desk. In the foreground, a custom-made toy figure of the person (keep the figure as close to the original person as possible, the body language, facial features and so on..) stands on a clear circular base. Next to it is the retail packaging box for the figure, prominently featuring the original photograph of the person on the front cover. In the background, a large computer monitor displays a 3D wireframe mesh model of the same figure within a 3D modeling software interface. A keyboard, mouse, and various cables are visible on the desk. Natural office lighting.";
                 
                 }
 
