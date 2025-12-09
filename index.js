@@ -95,8 +95,19 @@ async function connectToWhatsApp() {
             text.startsWith('.minecraft') ||
             text.startsWith('.pixar') ||
             text.startsWith('.passport') ||
-            text.startsWith('.hd')
+            text.startsWith('.hd') ||
+            text.startsWith('.zoomout') ||
+            text.startsWith('.cs2') ||
+            text.startsWith('.documentary') ||
+            text.startsWith('.pixelart') ||
+            text.startsWith('.tua') ||
+            text.startsWith('.badut') ||
+            text.startsWith('.rempit') ||
+            text.startsWith('.cyberpunk') ||
+            text.startsWith('.mewing') ||
+            text.startsWith('.tofigura')
             ) {
+
             try {
                 // 2. Robust Quoted Image Detection
                 // We check the quoted message for either a direct image OR a viewOnce image
@@ -192,6 +203,46 @@ async function connectToWhatsApp() {
                     // For .hd
                     prompt += "enhance the image quality, fix the lighting, remove noise, make it high resolution 4K";
                    
+                } else if (text.startsWith('.zoomout')) {
+                    // For .zoomOut
+                    prompt += "as if the camera of the original image was zoomed in, zoom out of the picture, generate the surrounding scenery and make it as accurate as possible";
+                   
+                } else if (text.startsWith('.cs2')) {
+                    // For .cs2
+                    prompt += "generate that person in a counter-strike 2 scene as a teammate but as a realistic person, keep everything else as close to the game as possible, use real map from counter-strike 2";
+                   
+                } else if (text.startsWith('.documentary')) {
+                    // For .documentary
+                    prompt += "Add a camera effect as if the image was recorded in a documentary, refer to Outlast 2 version of the camera style, but make it integrate nicely into an IRL image";
+                    
+                } else if (text.startsWith('.pixelart')) {
+                    // For .pixelart
+                    prompt += "turn the image into high quality low-resolution 8-bit pixel art";
+                   
+                } else if (text.startsWith('.tua')) {
+                    // For .tua
+                    prompt += "make the person look 80 years old, with many wrinkles, grey hair, and sagging skin. keep everything else the same";
+
+                } else if (text.startsWith('.badut')) {
+                    // For .badut
+                    prompt += "make the person look like a circus clown with full face makeup and a red nose";
+                    
+                } else if (text.startsWith('.rempit')) {
+                    // For .rempit
+                    prompt += "make the person look like a Malaysian Mat Rempit, wearing a reversed cap, windbreaker, and sitting on a modified motorcycle";
+                    
+                } else if (text.startsWith('.cyberpunk')) {
+                    // For .cyberpunk
+                    prompt += "make the person look like a cyborg from Cyberpunk 2077, with neon lights, metal skin parts, and futuristic visor";
+                    
+                } else if (text.startsWith('.mewing')) {
+                    // For .mewing
+                    prompt += "give the person an extremely sharp, exaggerated jawline and cheekbones (mewing look), gigachad energy";
+                    
+                } else if (text.startsWith('.tofigura')) {
+                    // For .tofigura
+                    prompt += "A realistic product photograph taken on a cluttered wooden office desk. In the foreground, a custom-made toy figure of the person stands on a clear circular base. Next to it is the retail packaging box for the figure, prominently featuring the original photograph of the person on the front cover. In the background, a large computer monitor displays a 3D wireframe mesh model of the same figure within a 3D modeling software interface. A keyboard, mouse, and various cables are visible on the desk. Natural office lighting."
+                
                 }
 
                 // Output the prompt in console (for debugging purposes)
