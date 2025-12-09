@@ -201,7 +201,7 @@ async function connectToWhatsApp() {
                    
                 } else if (text.startsWith('.hd')) {
                     // For .hd
-                    prompt += "Without changing a single detail of the image, enhance the image quality, wherever there's a blur, sharpen it ";
+                    prompt += "enhance the image quality, fix the lighting, remove noise, make it high resolution 4K";
                    
                 } else if (text.startsWith('.zoomout')) {
                     // For .zoomOut
@@ -213,7 +213,7 @@ async function connectToWhatsApp() {
                    
                 } else if (text.startsWith('.documentary')) {
                     // For .documentary
-                    prompt += "Keeping the aspect ratio and details of the original image, Add a camera effect as if the image was recorded in a documentary, refer to Outlast 2 version of the camera style, but make it integrate nicely into an IRL image";
+                    prompt += "Add a camera effect as if the image was recorded in a documentary, refer to Outlast 2 version of the camera style, but make it integrate nicely into an IRL image";
                     
                 } else if (text.startsWith('.pixelart')) {
                     // For .pixelart
@@ -255,44 +255,9 @@ async function connectToWhatsApp() {
                     },
                 };
 
-                // 6. Generate with Retry Mechanism (Free Tier Support)
-
-                // Helper function to pause execution
-                const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-                let result = null;
-                let retryCount = 0;
-                const maxRetries = 3;
-                let success = false;
-
-                while (!success && retryCount < maxRetries) {
-                    try {
-                        result = await model.generateContent([prompt, imagePart]);
-                        success = true;
-                    } catch (error) {
-                        // Check if error is a 429 (Rate Limit) or 'Resource Exhausted'
-                        if (error.message.includes('429') || error.message.includes('ResourceExhausted') || error.status === 429 ) {
-                            
-                            console.log('⚠️ Requesting too much.. Retrying after 10s.. (Attempt ${retryCount}/${maxRetries})');
-
-                            if (retryCount === 1) {
-                                await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Requesting too much.. Retrying in 10s..' }, { quoted: msg });
-                            }
-
-                            // Wait 10 seconds
-                            await sleep(10000);
-                        } else {
-                            // If it's a different error
-                            throw error;
-                        }
-                    }
-                }
-
-                if (!success) {
-                    throw new Error("Server is too busy. Failed after 3 retries,");
-                }
-
+                // 6. Generate
+                const result = await model.generateContent([prompt, imagePart]);
                 const response = await result.response;
-                
                 
                 try {
                     const outputBase64 = response.candidates[0].content.parts[0].inlineData.data;
@@ -300,7 +265,7 @@ async function connectToWhatsApp() {
 
                     await sock.sendMessage(msg.key.remoteJid, { 
                         image: outputBuffer, 
-                        caption: '' // No caption needed
+                        caption: '' 
                     }, { quoted: msg });
 
                 } catch (innerErr) {
@@ -310,10 +275,6 @@ async function connectToWhatsApp() {
 
             } catch (e) {
                 console.error("API Error:", e);
-                // Customize error message for users
-                let errorMessage = e.message;
-                if (e.message.includes('429')) errorMessage = "Traffic is high. Try again later.";
-                
                 await sock.sendMessage(msg.key.remoteJid, { text: '❌ Error: ' + e.message }, { quoted: msg });
             }
         }
