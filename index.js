@@ -1,5 +1,6 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } = require('@whiskeysockets/baileys');
 const pino = require('pino');
+const axios = require('axios');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@google/generative-ai");
 
 // --- CONFIGURATION ---
@@ -93,32 +94,25 @@ async function connectToWhatsApp() {
             await sock.sendMessage(msg.key.remoteJid, { text: 'Generating image by Khytron.. '}, { quoted: msg }); 
 
             try {
-                // Initialize the specific model
-                const model = genAI.getGenerativeModel({
-                    model: "imagen-3.0-generate-001",
-                    safetySettings: safetySettings
+                // 1. Construct the URL
+                const seed = Math.floor(Math.random() * 1000000 );
+                // Pollinations URL format
+                const imageUrl = 'https://image.pollinations.ai/prompt/$encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true';
+
+                // 2. Fetch using axios
+                const response = await axios.get(imageUrl, {
+                    responseType: 'arrayBuffer'
                 });
 
-                // Send the prompt (text only)
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
+                // 3. Convert to Buffer 
+                const outputBuffer = Buffer.from(response.data, 'binary');
 
-                // Extract image data
-                const parts = response.candidates[0].content.parts;
-                const imagePart = parts.find(part => part.inlineData);
-
-                if (imagePart) {
-                    const outputBase64 = imagePart.inlineData.data;
-                    const outputBuffer = Buffer.from(outputBase64,  "base64" );
-
-                    await sock.sendMessage(msg.key.remoteJid, {
-                        image: outputBuffer,
-                        caption: ''
-                    }, { quoted: msg });
-                } else {
-                    // Fallback if the API returns text instead of an image
-                    await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ The model returned text instead of an image. Check if your API Key has access to Imagen.' }, { quoted: msg });
-                }
+                // 4. Send to WhatsApp
+                await sock.sendMessage(msg.key.remoteJid, {
+                    image: outputBuffer,
+                    caption: ''
+                }, { quoted: msg });
+                
             } catch (e) {
                 console.error( "Imagine Error: ", e);
                 await sock.sendMessage(msg.key.remoteJid, { text: '❌ Error: ' + e.message }, { quoted: msg });
