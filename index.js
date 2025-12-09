@@ -97,7 +97,7 @@ async function connectToWhatsApp() {
                 // 1. Construct the URL
                 const seed = Math.floor(Math.random() * 1000000 );
                 // Pollinations URL format
-                const imageUrl = 'https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true';
+                const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true`;
 
                 // 2. Fetch using axios
                 const response = await axios.get(imageUrl, {
