@@ -80,33 +80,35 @@ async function connectToWhatsApp() {
         const text = msgContent.conversation || 
                     msgContent.imageMessage?.caption ||
                     msgContent.extendedTextMessage?.text || '';
-        // Old way: const text = msg.message.conversation || msg.message.imageMessage?.caption || msg.message.extendedTextMessage?.text || '';
         
         // Triggers
         if (text.startsWith('.botak') || 
-            text.startsWith('.niggafy') || 
+            text.startsWith('.niggakan') || 
             text.startsWith('.edit') || 
             text.startsWith('.princess') || 
             text.startsWith('.superman') ||
             text.startsWith('.putihkan') ||
-            text.startsWith('.gigachad')) {
+            text.startsWith('.gigachad') ||
+            text.startsWith('.penjarakan') ||
+            text.startsWith('.homeless') ||
+            text.startsWith('.anime') ||
+            text.startsWith('.minecraft') ||
+            text.startsWith('.pixar') ||
+            text.startsWith('.passport') ||
+            text.startsWith('.hd')
+            ) {
             try {
                 // 2. Robust Quoted Image Detection
                 // We check the quoted message for either a direct image OR a viewOnce image
                 const quotedMsg = msgContent.extendedTextMessage?.contextInfo?.quotedMessage;
                 
-                // Old way
-                // const isImage = Object.keys(msg.message)[0] === 'imageMessage';
-                // const isQuotedImage = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage;
-
-                // New way
                 const isImage = !!msgContent.imageMessage;
                 const isQuotedImage = quotedMsg?.imageMessage ||
                                         quotedMsg?.viewOnceMessage?.message?.imageMessage ||
                                         quotedMsg?.viewOnceMessageV2?.message?.imageMessage;
 
                 if (!isImage && !isQuotedImage) {
-                    await sock.sendMessage(msg.key.remoteJid, { text: 'Reply to an image!' }, { quoted: msg });
+                    await sock.sendMessage(msg.key.remoteJid, { text: 'Reply to an image or upload one..' }, { quoted: msg });
                     return;
                 }
 
@@ -114,12 +116,7 @@ async function connectToWhatsApp() {
 
                 // 3. Prepare Download
                 // If it's a quoted message, we pass the 'quotedMsg' object to the downloader
-                
-                // Old way: 
-                // const messageToDownload = isImage ? msg : { message: msg.message.extendedTextMessage.contextInfo.quotedMessage };
-                // const buffer = await downloadMediaMessage(messageToDownload, 'buffer', { logger: pino({ level: 'silent' }) });
-                
-                // New way: 
+
                 const messageToDownload = isImage ? msg : { message: quotedMsg };
                 
                 const buffer = await downloadMediaMessage(
@@ -129,7 +126,8 @@ async function connectToWhatsApp() {
                 );
 
                 // 4. Select Model
-                // We use 'gemini-3-pro-image-preview' because it is fast and supports image input
+                // We use 'gemini-3-pro-image-preview' 
+                // because it is state of the art model that supports image editing
                 const model = genAI.getGenerativeModel({ 
                     model: "gemini-3-pro-image-preview",
                     safetySettings: safetySettings });
@@ -142,7 +140,7 @@ async function connectToWhatsApp() {
                     // For .botak
                     prompt += "make the person bald";
                    
-                } else if (text.startsWith('.niggafy')) {
+                } else if (text.startsWith('.niggakan')) {
                     // For .niggakan
                     prompt += "make the person have darker skin tone";
             
@@ -151,6 +149,7 @@ async function connectToWhatsApp() {
                     prompt += "make the person wear a princess dress, dont enhance body features";
                   
                 } else if (text.startsWith('.edit')) {
+                    // For .edit
                     prompt += text.slice(text.indexOf(' ') + 1).trim();
                  
                 } else if (text.startsWith('.superman')) {
@@ -165,8 +164,37 @@ async function connectToWhatsApp() {
                     // For .gigachad
                     prompt += "make the person have gigachad facial features, keep everything else the same";
                    
+                } else if (text.startsWith('.penjarakan')) {
+                    // For .penjarakan
+                    prompt += "put the person in a jail cell wearing an orange prisoner jumpsuit";
+                   
+                } else if (text.startsWith('.homeless')) {
+                    // For .homeless
+                    prompt += "make the person look dirty and homeless, wearing rags, begging on the street";
+                   
+                } else if (text.startsWith('.anime')) {
+                    // For .anime
+                    prompt += "transform the scene into a high quality anime drawing style";
+                   
+                } else if (text.startsWith('.minecraft')) {
+                    // For .minecraft
+                    prompt += "transform the scene into a high quality minecraft, blocky voxel art style";
+                   
+                } else if (text.startsWith('.pixar')) {
+                    // For .pixar
+                    prompt += "transform the scene into a high quality cute 3D Pixar drawing style, smooth lighting";
+                   
+                } else if (text.startsWith('.passport')) {
+                    // For .passport
+                    prompt += "change the background to plain blue and make the person wear a formal black suit and tie staring straight at the camera, image looks like a legitimate passport photo";
+                   
+                } else if (text.startsWith('.hd')) {
+                    // For .hd
+                    prompt += "enhance the image quality, fix the lighting, remove noise, make it high resolution 4K";
+                   
                 }
 
+                // Output the prompt in console (for debugging purposes)
                 console.log("Edit Prompt:", prompt);
                 
                 const imagePart = {
@@ -191,7 +219,7 @@ async function connectToWhatsApp() {
 
                 } catch (innerErr) {
                     console.error("Gemini Blocked It:", innerErr);
-                    await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Gemini Safety Filter still blocked this. (Try a different photo)' }, { quoted: msg });
+                    await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Gemini Safety Filter blocked this. (Try a different photo)' }, { quoted: msg });
                 }
 
             } catch (e) {
@@ -206,7 +234,6 @@ async function connectToWhatsApp() {
 // RENDER SLEEP PREVENTION ENDPOINT
 // This endpoint responds to pings from Uptime Robot/Render
 app.get('/keep-awake', (req, res) => {
-    // You can add logic here to check your WhatsApp connection status
     res.status(200).send('Bot is Awake!');
 });
 
