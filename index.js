@@ -4,6 +4,10 @@ const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@googl
 
 // --- CONFIGURATION ---
 
+// This project uses Render and Uptime Robot 
+// to keep a free VM running 24/7
+// and the free Gemini API Key with the gemini-3-pro-image-preview model
+
 // Express Port
 const express = require('express');
 const app = express();
@@ -60,9 +64,25 @@ async function connectToWhatsApp() {
         const msg = messages[0];
         if (!msg.message) return;
 
-        const text = msg.message.conversation || msg.message.imageMessage?.caption || msg.message.extendedTextMessage?.text || '';
+        // --- HELPER: UNWRAP MESSAGE LAYERS ---
+        // This fixes issues with Disappearing Messages (Ephemeral) and ViewOnce
+        const getMessageContent = (m) => {
+            if (m.message?.ephemeralMessage) return m.message.ephemeralMessage.message;
+            if (m.message?.viewOnceMessage) return m.message.viewOnceMessage.message;
+            return m.message;
+        }
+
+        const msgContent = getMessageContent(msg);
+
+        // 1. Extract Text (Command) safely
+        // We read from 'msgContent' now, so we don't miss the text if it's inside an ephemeral message
         
-        // Triggers: .botak (Bald) or .niggafy (Darker) or others
+        const text = msgContent.conversation || 
+                    msgContent.imageMessage?.caption ||
+                    msgContent.extendedTextMessage?.text || '';
+        // Old way: const text = msg.message.conversation || msg.message.imageMessage?.caption || msg.message.extendedTextMessage?.text || '';
+        
+        // Triggers
         if (text.startsWith('.botak') || 
             text.startsWith('.niggafy') || 
             text.startsWith('.edit') || 
@@ -71,8 +91,19 @@ async function connectToWhatsApp() {
             text.startsWith('.putihkan') ||
             text.startsWith('.gigachad')) {
             try {
-                const isImage = Object.keys(msg.message)[0] === 'imageMessage';
-                const isQuotedImage = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage;
+                // 2. Robust Quoted Image Detection
+                // We check the quoted message for either a direct image OR a viewOnce image
+                const quotedMsg = msgContent.extendedTextMessage?.contextInfo?.quotedMessage;
+                
+                // Old way
+                // const isImage = Object.keys(msg.message)[0] === 'imageMessage';
+                // const isQuotedImage = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage;
+
+                // New way
+                const isImage = !!msgContent.imageMessage;
+                const isQuotedImage = quotedMsg?.imageMessage ||
+                                        quotedMsg?.viewOnceMessage?.message?.imageMessage ||
+                                        quotedMsg?.viewOnceMessageV2?.message?.imageMessage;
 
                 if (!isImage && !isQuotedImage) {
                     await sock.sendMessage(msg.key.remoteJid, { text: 'Reply to an image!' }, { quoted: msg });
@@ -81,17 +112,29 @@ async function connectToWhatsApp() {
 
                 await sock.sendMessage(msg.key.remoteJid, { text: 'Generating image.. ' }, { quoted: msg });
 
-                // // 1. Download
-                const messageToDownload = isImage ? msg : { message: msg.message.extendedTextMessage.contextInfo.quotedMessage };
-                const buffer = await downloadMediaMessage(messageToDownload, 'buffer', { logger: pino({ level: 'silent' }) });
+                // 3. Prepare Download
+                // If it's a quoted message, we pass the 'quotedMsg' object to the downloader
+                
+                // Old way: 
+                // const messageToDownload = isImage ? msg : { message: msg.message.extendedTextMessage.contextInfo.quotedMessage };
+                // const buffer = await downloadMediaMessage(messageToDownload, 'buffer', { logger: pino({ level: 'silent' }) });
+                
+                // New way: 
+                const messageToDownload = isImage ? msg : { message: quotedMsg };
+                
+                const buffer = await downloadMediaMessage(
+                    messageToDownload,
+                    'buffer',
+                    { logger: pino({ level: 'silent' }) }
+                );
 
-                // 2. Select Model
+                // 4. Select Model
                 // We use 'gemini-3-pro-image-preview' because it is fast and supports image input
                 const model = genAI.getGenerativeModel({ 
                     model: "gemini-3-pro-image-preview",
                     safetySettings: safetySettings });
 
-                // 3. THE PROMPTS
+                // 5. THE PROMPTS
                 // System prompt
                 let prompt = "Referring to the body language and facial structure, ";
                 
@@ -133,7 +176,7 @@ async function connectToWhatsApp() {
                     },
                 };
 
-                // 4. Generate
+                // 6. Generate
                 const result = await model.generateContent([prompt, imagePart]);
                 const response = await result.response;
                 
