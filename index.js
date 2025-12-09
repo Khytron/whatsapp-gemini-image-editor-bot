@@ -95,7 +95,7 @@ async function connectToWhatsApp() {
             try {
                 // Initialize the specific model
                 const model = genAI.getGenerativeModel({
-                    model: "imagen-3.0-fast-generate-001",
+                    model: "imagen-3.0-generate-001",
                     safetySettings: safetySettings
                 });
 
