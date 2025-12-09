@@ -2,7 +2,11 @@ This program leverages the use of the Gemini API specifically the gemini-3-pro-i
 It also uses Render to set up a VM to host the program on 24/7 specifically using Uptime Robot to overcome Render's weakness that it needed a URL every few mins to stay active
 
 Requirements: 
+- Gemini API (Tier 1) 
+- JDK version 16 or later
 - node.js
 - npm
+- Render
+- Uptime Robot
 
   To run this program, navigate to the directory of the project folder, then run "node index.js"
