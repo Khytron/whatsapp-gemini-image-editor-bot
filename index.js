@@ -80,6 +80,51 @@ async function connectToWhatsApp() {
         const text = msgContent.conversation || 
                     msgContent.imageMessage?.caption ||
                     msgContent.extendedTextMessage?.text || '';
+
+        // If user is trying to generate text-to-image
+        if (text.startsWith('.imagine')) {
+            const prompt = text.slice(text.indexOf(' ') + 1).trim(); // Getting user prompt
+
+            if (!prompt) {
+                await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Please provide a prompt.'}, { quoted: msg });
+                return;
+            }
+
+            await sock.sendMessage(msg.key.remoteJid, { text: 'Generating image by Khytron.. '}, { quoted: msg }); 
+
+            try {
+                // Initialize the specific model
+                const model = genAI.getGenerativeModel({
+                    model: "imagen-4-generate",
+                    safetySettings: safetySettings
+                });
+
+                // Send the prompt (text only)
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+
+                // Extract image data
+                const parts = response.candidates[0].content.parts;
+                const imagePart = parts.find(part => part.inlineData);
+
+                if (imagePart) {
+                    const outputBase64 = imagePart.inlineData.data;
+                    const outputBuffer = Buffer.from(outputBase64,  "base64" );
+
+                    await sock.sendMessage(msg.key.remoteJid, {
+                        image: outputBuffer,
+                        caption: ''
+                    }, { quoted: msg });
+                } else {
+                    // Fallback if the API returns text instead of an image
+                    await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ The model returned text instead of an image. Check if your API Key has access to Imagen.' }, { quoted: msg });
+                }
+            } catch (e) {
+                console.error( "Imagine Error: ", e);
+                await sock.sendMessage(msg.key.remoteJid, { text: '❌ Error: ' + e.message }, { quoted: msg });
+            }
+            return; // Stop here after .imagine command is finished
+        }
         
         // Triggers
         if (text.startsWith('.botak') || 
@@ -123,7 +168,7 @@ async function connectToWhatsApp() {
                     return;
                 }
 
-                await sock.sendMessage(msg.key.remoteJid, { text: 'Generating image.. ' }, { quoted: msg });
+                await sock.sendMessage(msg.key.remoteJid, { text: 'Generating image by Khytron.. ' }, { quoted: msg });
 
                 // 3. Prepare Download
                 // If it's a quoted message, we pass the 'quotedMsg' object to the downloader
