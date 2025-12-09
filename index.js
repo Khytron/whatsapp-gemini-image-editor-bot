@@ -84,7 +84,7 @@ async function connectToWhatsApp() {
 
         // If user is trying to generate text-to-image
         if (text.startsWith('.imagine')) {
-            const prompt = text.slice(text.indexOf(' ') + 1).trim(); // Getting user prompt
+            const prompt = text.replace('.imagine', '').trim(); // Getting user prompt
 
             if (!prompt) {
                 await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Please provide a prompt.'}, { quoted: msg });
@@ -97,11 +97,11 @@ async function connectToWhatsApp() {
                 // 1. Construct the URL
                 const seed = Math.floor(Math.random() * 1000000 );
                 // Pollinations URL format
-                const imageUrl = 'https://image.pollinations.ai/prompt/$encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true';
+                const imageUrl = 'https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true';
 
                 // 2. Fetch using axios
                 const response = await axios.get(imageUrl, {
-                    responseType: 'arrayBuffer'
+                    responseType: 'arraybuffer'
                 });
 
                 // 3. Convert to Buffer 
@@ -112,7 +112,7 @@ async function connectToWhatsApp() {
                     image: outputBuffer,
                     caption: ''
                 }, { quoted: msg });
-                
+
             } catch (e) {
                 console.error( "Imagine Error: ", e);
                 await sock.sendMessage(msg.key.remoteJid, { text: '❌ Error: ' + e.message }, { quoted: msg });
