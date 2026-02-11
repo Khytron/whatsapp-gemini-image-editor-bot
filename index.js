@@ -195,7 +195,7 @@ async function connectToWhatsApp() {
                 // We use 'gemini-3-pro-image-preview' 
                 // because it is state of the art model that supports image editing
                 const model = genAI.getGenerativeModel({ 
-                    model: "gemini-2.5-flash-image",
+                    model: "gemini-3-pro-image-preview",
                     safetySettings: safetySettings });
 
                 // 5. THE PROMPTS
