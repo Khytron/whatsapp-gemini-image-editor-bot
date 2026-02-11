@@ -1,6 +1,7 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const axios = require('axios');
+const fs = require('fs');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@google/generative-ai");
 
 // --- CONFIGURATION ---
@@ -41,12 +42,12 @@ async function connectToWhatsApp() {
 
     const sock = makeWASocket({
         auth: state,
-        printQRInTerminal: true,
+        printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
         browser: ["Ubuntu", "Chrome", "20.0.04"]
     });
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
         if (qr) {
              console.log(`Scan this QR (raw): ${qr}`);
@@ -57,8 +58,18 @@ async function connectToWhatsApp() {
             console.log(`WhatsApp connection state: ${connection}`);
         }
         if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-            if (shouldReconnect) connectToWhatsApp();
+            const statusCode = (lastDisconnect?.error)?.output?.statusCode;
+            console.warn('WhatsApp connection closed', { statusCode, error: lastDisconnect?.error });
+            const isLoggedOut = statusCode === DisconnectReason.loggedOut;
+            if (isLoggedOut) {
+                console.warn('Logged out; clearing auth_info_baileys to force re-link.');
+                try {
+                    await fs.promises.rm('auth_info_baileys', { recursive: true, force: true });
+                } catch (error) {
+                    console.error('Failed to clear auth_info_baileys:', error);
+                }
+            }
+            setTimeout(() => connectToWhatsApp(), 1000);
         } else if (connection === 'open') {
             console.log('✅ Connected to WhatsApp!');
         }
