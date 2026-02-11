@@ -36,11 +36,12 @@ const safetySettings = [
 ];
 
 async function connectToWhatsApp() {
+    console.log('Starting WhatsApp connection...');
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
         auth: state,
-        printQRInTerminal: false,
+        printQRInTerminal: true,
         logger: pino({ level: 'silent' }),
         browser: ["Ubuntu", "Chrome", "20.0.04"]
     });
@@ -48,8 +49,12 @@ async function connectToWhatsApp() {
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
         if (qr) {
+             console.log(`Scan this QR (raw): ${qr}`);
              const qrcode = require('qrcode-terminal');
              qrcode.generate(qr, { small: true });
+        }
+        if (connection) {
+            console.log(`WhatsApp connection state: ${connection}`);
         }
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
@@ -332,4 +337,7 @@ app.listen(PORT, () => {
     console.log(`Web Server listening on port ${PORT}`);
 });
 
-connectToWhatsApp();
+connectToWhatsApp().catch((error) => {
+    console.error('Failed to connect to WhatsApp:', error);
+    process.exit(1);
+});
